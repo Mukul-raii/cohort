@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.2.1/axios.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Kidney Management</title>
+  </head>
+  <body class="bg-gray-100">
+    <!-- Navbar -->
+    <nav class="bg-black h-12 flex items-center justify-center mb-8">
+      <h1 class="text-white text-2xl font-bold">Kidney Management</h1>
+    </nav>
+    <!-- Input Section -->
+    <div class="max-w-md mx-auto bg-white p-6 rounded-lg shadow-lg mb-8">
+      <input
+        type="text"
+        id="username"
+        name="username"
+        placeholder="Enter username"
+        class="w-full p-2 border border-gray-300 rounded mb-4"
+      /><button
+        id="loginBtn"
+        class="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600"
+      >
+        Login
+      </button>
+    </div>
+    <!-- Action Buttons Section -->
+    <div class="max-w-md mx-auto bg-white p-6 rounded-lg shadow-lg mb-8">
+      <div class="flex justify-between mb-4">
+        <button
+          id="addHealthyKidneyBtn"
+          class="bg-green-500 text-white p-2 rounded hover:bg-green-600"
+        >
+          Add Healthy Kidney</button
+        ><button
+          id="addUnhealthyKidneyBtn"
+          class="bg-red-500 text-white p-2 rounded hover:bg-red-600"
+        >
+          Add Unhealthy Kidney
+        </button>
+      </div>
+      <div class="flex justify-between mb-4">
+        <button
+          id="recoverKidneyBtn"
+          class="bg-yellow-500 text-white p-2 rounded hover:bg-yellow-600"
+        >
+          Recover Kidney</button
+        ><button
+          id="deleteUserBtn"
+          class="bg-gray-500 text-white p-2 rounded hover:bg-gray-600"
+        >
+          Delete User
+        </button>
+      </div>
+
+      <button
+        id="userlist"
+        class="w-full bg-indigo-500 text-white p-2 rounded hover:bg-indigo-600"
+      >
+        Get UsersList
+      </button>
+    </div>
+    <!-- User List Section -->
+    <div class="max-w-md mx-auto bg-white p-6 rounded-lg shadow-lg">
+      <h2 class="text-xl font-bold mb-4">Current user</h2>
+      <ul id="currentUserContainer" class="list-disc pl-5 space-y-2"></ul>
+      <h2 class="text-xl font-bold mb-4">User List</h2>
+      <ul id="userListContainer" class="list-disc pl-5 space-y-2"></ul>
+    </div>
+
+    <script>
+      // Login or Add User
+      let UserInterval;
+      async function loginUser() {
+        const username = document.getElementById("username").value;
+
+        axios.post("/api/user", {
+          username: username,
+        });
+
+        setInterval(Currentuser, 500);
+      }
+
+      // Add Kidney
+      async function addKidney(type) {
+        await axios.post(`/api/kidney?h=${type}`);
+      }
+
+      // Recover Kidney
+      async function recoverKidney() {
+        await axios.put("/api/recover");
+      }
+
+      // Delete User
+      async function deleteUser() {
+        await axios.delete("/api/delete");
+      }
+
+      async function Currentuser() {
+        await axios.get("/api/user").then((response) => {
+          const temp = document.getElementById("currentUserContainer");
+          const res = response.data;
+
+          if (res.name === undefined) {
+            temp.innerHTML = "<h1>No User Found</h1>";
+            clearInterval(Currentuser);
+          }
+          if (res.currentUser.name !== "Admin") {
+            temp.innerHTML = `<li> <h1>Name :${res.currentUser.name}</h1>
+            <p>HealthyKidney:${res.currentUser.healthyKidney}</p>
+            <p>UnHealthyKidney:${res.currentUser.unhealthyKidney}</p>
+             </li>`;
+          }
+        });
+      }
+
+      async function UserList() {
+        await axios.get("/api/userlist").then((response) => {
+          const temp = document.getElementById("userListContainer");
+
+          const res = response.data.users;
+          console.log(response);
+
+          if (response.data.message === "true") {
+            temp.innerHTML = `<h1>You are not Authorised</h1>`;
+          } else {
+            let htmlContent = "";
+            res.forEach((element, index) => {
+              if (index != 0) {
+                htmlContent += `<li> <h1>Name :${element.name}</h1>
+            <p>HealthyKidney:${element.healthyKidney}</p>
+            <p>UnHealthyKidney:${element.unhealthyKidney}</p>
+             </li>`;
+              }
+            });
+            temp.innerHTML = htmlContent;
+          }
+        });
+      }
+      // Add event listeners
+      document.getElementById("loginBtn").addEventListener("click", loginUser);
+      document
+        .getElementById("addHealthyKidneyBtn")
+        .addEventListener("click", () => addKidney("healthy"));
+      document
+        .getElementById("addUnhealthyKidneyBtn")
+        .addEventListener("click", () => addKidney("unhealthy"));
+      document
+        .getElementById("recoverKidneyBtn")
+        .addEventListener("click", recoverKidney);
+      document
+        .getElementById("deleteUserBtn")
+        .addEventListener("click", deleteUser);
+      document.getElementById("userlist").addEventListener("click", UserList);
+    </script>
+  </body>
+</html>
